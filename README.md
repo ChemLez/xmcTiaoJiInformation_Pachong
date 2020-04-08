@@ -71,5 +71,6 @@ def main():
 
 小木虫调剂信息网站:http://muchong.com/bbs/kaoyan.php
 
-
+### 写在最后
 
+由于代码能力较弱，代码质量并不是很高，欢迎**Pull**。
