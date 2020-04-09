@@ -1,3 +1,5 @@
+#!~/opt/anaconda3/bin/python
+# -*- coding: utf-8 -*-
 import requests
 from bs4 import BeautifulSoup
 import re
@@ -93,9 +95,9 @@ def parameters(pro_='', pro_1='', pro_2='', year=''):
 
 def main():
     url = 'http://muchong.com/bbs/kaoyan.php?'
-    path = './data_info.csv'
+    path = './2020计算机调剂信息(截止4.09).csv'
     pre_params = ['r1%5B%5D=', 'r2%5B%5D=', 'r3%5B%5D=', 'year=']
-    params = parameters(pro_='08', pro_1='0801')
+    params = parameters(pro_='08', pro_1='0812',year='2020')
     dataList = []
     getDataInfo(dataList, url, pre_params, *params)
     outputCSV(dataList, path)
