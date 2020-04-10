@@ -1,3 +1,5 @@
+#! ~/opt/anaconda3/bin/python
+# -*- coding: utf-8 -*-
 import requests
 from bs4 import BeautifulSoup
 import re
@@ -8,10 +10,11 @@ from threading import Thread
 from threading import Lock
 import time
 
-# 获取网页
-
 
 def getHTMLText(url):
+    """
+    获取网页
+    """
     try:
         r = requests.get(url, timeout=30)
         r.raise_for_status()
@@ -20,10 +23,11 @@ def getHTMLText(url):
     except:
         return ''
 
-# 获取当前需要爬取的页面数，及完整链接
-
 
 def getPages(infoList, url, pre_params, *args):
+    """
+    获取当前需要爬取的页面数，及完整链接
+    """
 
     params = []
     count = -1
@@ -53,16 +57,19 @@ def getPages(infoList, url, pre_params, *args):
     return pages, url
 
 
-# 获取数据信息
 page = 0
 lock = Lock()
 
 
 def getDataInfo(infoList, pages, url):
+    """
+    获取数据信息
+    """
     global page
     while True:
-
+        lock.acquire()
         page += 1
+        lock.release()
         if page > pages:
             break
         url = url + '&page=' + str(page)
@@ -86,18 +93,19 @@ def getDataInfo(infoList, pages, url):
             dicts['href'] = href
             print(dicts)
             infoList.append(dicts)
-        # lock.release()
 
 
 def outputCSV(infoList, path):
-
+    """
+    输出文档
+    """
     data = pd.DataFrame(infoList)
     # with open(r'./info.csv','w+',encoding='utf-8') as f:
     try:
 
         data.columns = ['标题', '学校', '门类/专业', '招生人数', '发布时间', '链接']
-        # data.sort_values(by='发布时间', ascending=False, inplace=True)
-        # data = data.reset_index(drop=True)
+        data.sort_values(by='发布时间', ascending=False, inplace=True)
+        data = data.reset_index(drop=True)
     except:
         print('没有调剂信息...')
         return
@@ -112,13 +120,18 @@ def outputCSV(infoList, path):
         print('保存失败')
 
 
-# 设定查询参数 -- 专业、年份
 def parameters(pro_='', pro_1='', pro_2='', year=''):
+    """
+    设定查询参数 -- 专业、年份
+    """
     paramsList = [pro_, pro_1, pro_2, year]
     return paramsList
 
 
 def threadingUp(count, infoList, pages, url):
+    """
+    启动多线程
+    """
     threadList = []
     iList = []
     for i in range(count):
@@ -139,11 +152,12 @@ def main():
     count = 1000
     pages, url_ = getPages(dataList, url, pre_params, *params)
     start = time.time()
-    threadingUp(count, dataList, pages, url_) # 多线程
+    threadingUp(count, dataList, pages, url_)  # 多线程
     # getDataInfo(dataList,pages,url_) # 单线程
     outputCSV(dataList, path)
     end = time.time()
     print('时间:'+str(end - start))
 
 
-main()
+if __name__ == "__main__":
+    main()
