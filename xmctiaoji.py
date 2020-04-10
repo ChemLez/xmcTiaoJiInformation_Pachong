@@ -1,13 +1,16 @@
-#!~/opt/anaconda3/bin/python
-# -*- coding: utf-8 -*-
 import requests
 from bs4 import BeautifulSoup
 import re
 import pandas as pd
 import os
-
+import time
+from threading import Thread
+from threading import Lock
+import time
 
 # 获取网页
+
+
 def getHTMLText(url):
     try:
         r = requests.get(url, timeout=30)
@@ -17,9 +20,11 @@ def getHTMLText(url):
     except:
         return ''
 
+# 获取当前需要爬取的页面数，及完整链接
 
-# 获取数据
-def getDataInfo(infoList, url, pre_params, *args):
+
+def getPages(infoList, url, pre_params, *args):
+
     params = []
     count = -1
     for i in args:
@@ -45,9 +50,24 @@ def getDataInfo(infoList, url, pre_params, *args):
     if pages == 0:
         pages += 1
 
-    for i in range(pages):  # 遍历每一页
-        page = i + 1
+    return pages, url
+
+
+# 获取数据信息
+page = 0
+lock = Lock()
+
+
+def getDataInfo(infoList, pages, url):
+    global page
+    while True:
+
+        page += 1
+        if page > pages:
+            break
         url = url + '&page=' + str(page)
+        time.sleep(1)
+        # lock.acquire()
         html = getHTMLText(url)
         soup = BeautifulSoup(html, 'html.parser')
         tbody = soup.find_all('tbody', 'forum_body_manage')[0]
@@ -66,21 +86,26 @@ def getDataInfo(infoList, url, pre_params, *args):
             dicts['href'] = href
             print(dicts)
             infoList.append(dicts)
+        # lock.release()
 
 
 def outputCSV(infoList, path):
+
     data = pd.DataFrame(infoList)
     # with open(r'./info.csv','w+',encoding='utf-8') as f:
     try:
 
         data.columns = ['标题', '学校', '门类/专业', '招生人数', '发布时间', '链接']
+        # data.sort_values(by='发布时间', ascending=False, inplace=True)
+        # data = data.reset_index(drop=True)
     except:
         print('没有调剂信息...')
+        return
 
     try:
         if not os.path.exists(path):
             data.to_csv(path)
-            print('保存成功')
+            print('爬取成功')
         else:
             print('路径存在')
     except:
@@ -93,14 +118,32 @@ def parameters(pro_='', pro_1='', pro_2='', year=''):
     return paramsList
 
 
+def threadingUp(count, infoList, pages, url):
+    threadList = []
+    iList = []
+    for i in range(count):
+        iList.append(i)
+        t = Thread(target=getDataInfo, args=(infoList, pages, url))
+        t.start()
+        threadList.append(t)
+    for thread in threadList:
+        thread.join()
+
+
 def main():
     url = 'http://muchong.com/bbs/kaoyan.php?'
-    path = './2020计算机调剂信息(截止4.09).csv'
-    pre_params = ['r1%5B%5D=', 'r2%5B%5D=', 'r3%5B%5D=', 'year=']
-    params = parameters(pro_='08', pro_1='0812',year='2020')
+    path = './08.csv'
+    pre_params = ['r1%5B%5D=',  'r2%5B%5D=', 'r3%5B%5D=', 'year=']
+    params = parameters(pro_='08', year='2020')
     dataList = []
-    getDataInfo(dataList, url, pre_params, *params)
+    count = 1000
+    pages, url_ = getPages(dataList, url, pre_params, *params)
+    start = time.time()
+    threadingUp(count, dataList, pages, url_) # 多线程
+    # getDataInfo(dataList,pages,url_) # 单线程
     outputCSV(dataList, path)
+    end = time.time()
+    print('时间:'+str(end - start))
 
 
 main()
