@@ -1,4 +1,3 @@
-#! ~/opt/anaconda3/bin/python
 # -*- coding: utf-8 -*-
 import requests
 from bs4 import BeautifulSoup
@@ -100,7 +99,6 @@ def outputCSV(infoList, path):
     输出文档
     """
     data = pd.DataFrame(infoList)
-    # with open(r'./info.csv','w+',encoding='utf-8') as f:
     try:
 
         data.columns = ['标题', '学校', '门类/专业', '招生人数', '发布时间', '链接']
@@ -145,9 +143,9 @@ def threadingUp(count, infoList, pages, url):
 
 def main():
     url = 'http://muchong.com/bbs/kaoyan.php?'
-    path = './08.csv'
+    path = './08_0812.csv'
     pre_params = ['r1%5B%5D=',  'r2%5B%5D=', 'r3%5B%5D=', 'year=']
-    params = parameters(pro_='08', year='2020')
+    params = parameters(pro_='08', pro_1='0812',year='2020')
     dataList = []
     count = 1000
     pages, url_ = getPages(dataList, url, pre_params, *params)
